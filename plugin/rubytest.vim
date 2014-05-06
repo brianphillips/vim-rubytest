@@ -39,11 +39,7 @@ function s:FindCase(patterns)
     let line = getline(ln)
     for pattern in keys(a:patterns)
       if line =~ pattern
-        if s:pattern == 'spec'
-          return a:patterns[pattern](ln)
-        else
-          return a:patterns[pattern](line)
-        endif
+        return a:patterns[pattern](ln, line)
       endif
     endfor
     let ln -= 1
@@ -161,32 +157,37 @@ let s:test_patterns['test'] = function('s:RunTest')
 let s:test_patterns['spec'] = function('s:RunSpec')
 let s:test_patterns['\.feature$'] = function('s:RunFeature')
 
-function s:GetTestCaseName1(str)
+function s:GetTestCaseName1(ln, str)
   return split(a:str)[1]
 endfunction
 
-function s:GetTestCaseName2(str)
+function s:GetTestCaseName2(ln, str)
   return "test_" . join(split(split(a:str, '"')[1]), '_')
 endfunction
 
-function s:GetTestCaseName3(str)
+function s:GetTestCaseName3(ln, str)
   return split(a:str, '"')[1]
 endfunction
 
-function s:GetTestCaseName4(str)
+function s:GetTestCaseName4(ln, str)
   return "test_" . join(split(split(a:str, "'")[1]), '_')
 endfunction
 
-function s:GetTestCaseName5(str)
+function s:GetTestCaseName5(ln, str)
   return split(a:str, "'")[1]
 endfunction
 
-function s:GetTestSuiteName(str)
+function s:GetTestSuiteName(ln, str)
   return split(a:str)[1]
 endfunction
 
-function s:GetSpecLine(str)
-  return a:str
+function s:GetSpecLine(ln, str)
+  if g:rubytest_minitest_spec == 1
+    let name = matchstr(a:str, '^\s*\(it\|example\|scenario\|describe\|context\|feature\)\s*\([''"]\)\zs.\{-}\ze\2\s*do')
+    return name
+  else
+    return a:ln
+  endif
 endfunction
 
 function s:GetStoryLine(str)
